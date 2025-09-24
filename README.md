@@ -47,17 +47,28 @@ YunPan/
 
    或者在 CMake / qmake 工程中将 `qml/` 添加到 `QML_IMPORT_PATH`。
 
-2. **扩展主题**
+2. **使用 Python 启动示例窗口**
+
+   如果更习惯以 Python 方式运行，可安装 [PySide6](https://doc.qt.io/qtforpython/) 并使用仓库中提供的脚本：
+
+   ```bash
+   pip install PySide6
+   python examples/gallery/run.py
+   ```
+
+   脚本会自动将仓库根目录下的 `qml/` 加入 QML 导入路径，然后载入 `examples/gallery/main.qml` 展示控件库。
+
+3. **扩展主题**
 
    - 在 `ThemeData.js` 中新增主题条目并补充色板。
    - 通过 `ThemeManager.availableThemes()` 获取主题名称列表，并利用 `ThemeManager.setTheme("yourTheme")` 切换。
 
-3. **扩展语言**
+4. **扩展语言**
 
    - 在 `I18nData.js` 中增加新的语言键值对。
    - 调用 `I18nManager.setLanguage("langCode")` 即可切换到目标语言。
 
-4. **新增控件**
+5. **新增控件**
 
    - 在 `Controls` 目录中创建对应的 QML 文件与 JS 文件，遵循现有命名方式（例如 `XxxControl.qml` 与 `XxxControlLogic.js`）。
    - 在 `qmldir` 文件中注册新的控件类，便于外部通过 `import CustomControls 1.0 as Custom` 引入。
