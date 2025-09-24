@@ -9,15 +9,39 @@ ApplicationWindow {
     width: 480
     height: 320
 
-    title: {
-        Custom.I18nManager.revision;
-        return Custom.I18nManager.tr("labels.headline", "Custom Controls Library");
+    property string windowTitle: Custom.I18nManager.tr("labels.headline", "Custom Controls Library")
+    property color windowBackground: Custom.ThemeManager.token("surface.background")
+    property color panelBackground: Custom.ThemeManager.token("surface.backgroundRaised")
+    property color panelBorder: Custom.ThemeManager.token("surface.border")
+
+    function updateTitle() {
+        windowTitle = Custom.I18nManager.tr("labels.headline", "Custom Controls Library");
     }
 
-    color: {
-        Custom.ThemeManager.revision;
-        return Custom.ThemeManager.token("surface.background");
+    function updateThemeColors() {
+        windowBackground = Custom.ThemeManager.token("surface.background");
+        panelBackground = Custom.ThemeManager.token("surface.backgroundRaised");
+        panelBorder = Custom.ThemeManager.token("surface.border");
     }
+
+    Component.onCompleted: {
+        updateTitle();
+        updateThemeColors();
+    }
+
+    Connections {
+        target: Custom.I18nManager
+        onLanguageChanged: updateTitle()
+    }
+
+    Connections {
+        target: Custom.ThemeManager
+        onThemeChanged: updateThemeColors()
+    }
+
+    title: windowTitle
+
+    color: windowBackground
 
     ColumnLayout {
         anchors.fill: parent
@@ -33,18 +57,40 @@ ApplicationWindow {
             spacing: 12
 
             Button {
-                text: {
-                    Custom.I18nManager.revision;
-                    return Custom.I18nManager.tr("actions.toggleTheme", "Toggle theme");
+                id: toggleThemeButton
+                property string cachedText: Custom.I18nManager.tr("actions.toggleTheme", "Toggle theme")
+
+                function updateText() {
+                    cachedText = Custom.I18nManager.tr("actions.toggleTheme", "Toggle theme");
                 }
+
+                Component.onCompleted: updateText()
+
+                Connections {
+                    target: Custom.I18nManager
+                    onLanguageChanged: updateText()
+                }
+
+                text: cachedText
                 onClicked: Custom.ThemeManager.toggleTheme()
             }
 
             Button {
-                text: {
-                    Custom.I18nManager.revision;
-                    return Custom.I18nManager.tr("actions.toggleLanguage", "Switch language");
+                id: toggleLanguageButton
+                property string cachedText: Custom.I18nManager.tr("actions.toggleLanguage", "Switch language")
+
+                function updateText() {
+                    cachedText = Custom.I18nManager.tr("actions.toggleLanguage", "Switch language");
                 }
+
+                Component.onCompleted: updateText()
+
+                Connections {
+                    target: Custom.I18nManager
+                    onLanguageChanged: updateText()
+                }
+
+                text: cachedText
                 onClicked: Custom.I18nManager.toggleLanguage()
             }
         }
@@ -53,14 +99,8 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
             radius: 12
-            color: {
-                Custom.ThemeManager.revision;
-                return Custom.ThemeManager.token("surface.backgroundRaised");
-            }
-            border.color: {
-                Custom.ThemeManager.revision;
-                return Custom.ThemeManager.token("surface.border");
-            }
+            color: window.panelBackground
+            border.color: window.panelBorder
 
             Column {
                 anchors.centerIn: parent

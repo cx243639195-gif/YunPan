@@ -29,8 +29,8 @@ YunPan/
 
 ## 功能特性
 
-- **主题一键切换**：`ThemeManager` 单例维护当前主题与可用主题列表，JS 中的 `ThemeData` 负责定义主题色板与 token 解析。控件只需通过 `ThemeManager.palette` 或 `ThemeManager.token()` 获取颜色，即可自动响应主题切换，同时可监听 `ThemeManager.revision` 作为轻量的绑定依赖。
-- **多语言一键切换**：`I18nManager` 单例提供当前语言与翻译函数，所有控件通过访问该单例实现文本的动态刷新。`I18nData.js` 内置英文与简体中文示例，可扩展至更多语言；在 QML 中可绑定 `I18nManager.revision` 以便在语言切换时刷新 UI。
+- **主题一键切换**：`ThemeManager` 单例维护当前主题与可用主题列表，JS 中的 `ThemeData` 负责定义主题色板与 token 解析。控件通常在内部缓存主题色值，并监听 `ThemeManager.themeChanged`（或直接观察 `ThemeManager.palette`）来刷新自身的颜色，从而避免在窗口拖动等频繁几何变动时重复执行 JS 逻辑。
+- **多语言一键切换**：`I18nManager` 单例提供当前语言与翻译函数，所有控件通过访问该单例实现文本的动态刷新。`I18nData.js` 内置英文与简体中文示例，可扩展至更多语言；组件可监听 `I18nManager.languageChanged` 并按需更新缓存的翻译字符串，减少界面重计算带来的卡顿。
 - **QML/JS 对应结构**：每个控件都拆分为 QML 与 JS 两部分，QML 负责声明式界面，JS 专注样式计算与状态逻辑，方便后续复用或替换。
 - **示例应用**：`examples/gallery/main.qml` 演示了如何在 `ApplicationWindow` 中引入控件库并通过按钮切换主题与语言。
 
@@ -70,7 +70,7 @@ YunPan/
 
 5. **新增控件**
 
-   - 在 `Controls` 目录中创建对应的 QML 文件与 JS 文件，遵循现有命名方式（例如 `XxxControl.qml` 与 `XxxControlLogic.js`）。
+   - 在 `Controls` 目录中创建对应的 QML 文件与 JS 文件，遵循现有命名方式（例如 `XxxControl.qml` 与 `XxxControlLogic.js`）。控件内部建议缓存翻译与主题色值，并在语言/主题切换信号触发时刷新，以提升交互时的流畅度。
    - 在 `qmldir` 文件中注册新的控件类，便于外部通过 `import CustomControls 1.0 as Custom` 引入。
 
 ## 后续建议

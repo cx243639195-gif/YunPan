@@ -9,7 +9,56 @@ Button {
     property string textKey: "buttons.primary.default"
     property bool busy: false
 
-    readonly property var themePalette: Custom.ThemeManager.palette
+    property var themePalette: Custom.ThemeManager.palette
+    property string displayText: Custom.I18nManager.tr(control.textKey, control.textKey)
+    property color backgroundColor: "#000000"
+    property color foregroundColor: "#ffffff"
+    property real resolvedOpacity: 1.0
+
+    function updateDisplayText() {
+        displayText = Custom.I18nManager.tr(control.busy ? "buttons.primary.loading" : control.textKey,
+                                            control.busy ? "Loading..." : control.textKey);
+    }
+
+    function updateColors() {
+        backgroundColor = Logic.backgroundColor(control.themePalette, control);
+        foregroundColor = Logic.foregroundColor(control.themePalette, control);
+    }
+
+    function updateOpacity() {
+        resolvedOpacity = Logic.opacity(control);
+    }
+
+    function refreshVisualState() {
+        updateColors();
+        updateOpacity();
+    }
+
+    Component.onCompleted: {
+        updateDisplayText();
+        refreshVisualState();
+    }
+
+    onBusyChanged: {
+        updateDisplayText();
+        refreshVisualState();
+    }
+
+    onTextKeyChanged: updateDisplayText()
+    onHoveredChanged: updateColors()
+    onDownChanged: updateColors()
+    onEnabledChanged: updateOpacity()
+    onThemePaletteChanged: updateColors()
+
+    Connections {
+        target: Custom.I18nManager
+        onLanguageChanged: updateDisplayText()
+    }
+
+    Connections {
+        target: Custom.ThemeManager
+        onThemeChanged: updateColors()
+    }
 
     implicitHeight: contentItem.implicitHeight + topPadding + bottomPadding
     implicitWidth: Math.max(background.implicitWidth, contentItem.implicitWidth + leftPadding + rightPadding)
@@ -18,10 +67,10 @@ Button {
     rightPadding: Logic.horizontalPadding()
     topPadding: Logic.verticalPadding()
     bottomPadding: Logic.verticalPadding()
-
+    
     enabled: !control.busy
     focusPolicy: Qt.StrongFocus
-    opacity: Logic.opacity(control)
+    opacity: control.resolvedOpacity
 
     contentItem: Row {
         id: layout
@@ -36,18 +85,10 @@ Button {
         }
 
         Text {
-            function translatedText() {
-                return Custom.I18nManager.tr(control.busy ? "buttons.primary.loading" : control.textKey,
-                                              control.busy ? "Loading..." : control.textKey);
-            }
-
-            text: {
-                Custom.I18nManager.revision;
-                return translatedText();
-            }
+            text: control.displayText
 
             font.bold: true
-            color: Logic.foregroundColor(control.themePalette, control)
+            color: control.foregroundColor
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             wrapMode: Text.NoWrap
@@ -59,7 +100,7 @@ Button {
         implicitWidth: 120
         implicitHeight: 36
         radius: 6
-        color: Logic.backgroundColor(control.themePalette, control)
+        color: control.backgroundColor
         border.color: "transparent"
     }
 }
