@@ -7,6 +7,8 @@ QtObject {
 
     property string currentTheme: ThemeData.defaultTheme()
     property var palette: ThemeData.theme(currentTheme)
+    property int revision: 0
+    property var _tokenCache: Object.create(null)
 
     signal themeChanged(string themeName)
 
@@ -35,8 +37,22 @@ QtObject {
     }
 
     function token(path) {
-        return ThemeData.resolveToken(palette, path);
+        if (!path)
+            return palette;
+
+        var cached = _tokenCache[path];
+        if (cached !== undefined)
+            return cached;
+
+        var value = ThemeData.resolveToken(palette, path);
+        _tokenCache[path] = value;
+        return value;
     }
 
-    onCurrentThemeChanged: themeChanged(currentTheme)
+    onPaletteChanged: _tokenCache = Object.create(null)
+    onCurrentThemeChanged: {
+        _tokenCache = Object.create(null);
+        revision += 1;
+        themeChanged(currentTheme);
+    }
 }

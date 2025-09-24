@@ -10,12 +10,12 @@ ApplicationWindow {
     height: 320
 
     title: {
-        Custom.I18nManager.currentLanguage;
+        Custom.I18nManager.revision;
         return Custom.I18nManager.tr("labels.headline", "Custom Controls Library");
     }
 
     color: {
-        Custom.ThemeManager.palette;
+        Custom.ThemeManager.revision;
         return Custom.ThemeManager.token("surface.background");
     }
 
@@ -34,7 +34,7 @@ ApplicationWindow {
 
             Button {
                 text: {
-                    Custom.I18nManager.currentLanguage;
+                    Custom.I18nManager.revision;
                     return Custom.I18nManager.tr("actions.toggleTheme", "Toggle theme");
                 }
                 onClicked: Custom.ThemeManager.toggleTheme()
@@ -42,7 +42,7 @@ ApplicationWindow {
 
             Button {
                 text: {
-                    Custom.I18nManager.currentLanguage;
+                    Custom.I18nManager.revision;
                     return Custom.I18nManager.tr("actions.toggleLanguage", "Switch language");
                 }
                 onClicked: Custom.I18nManager.toggleLanguage()
@@ -54,11 +54,11 @@ ApplicationWindow {
             Layout.fillHeight: true
             radius: 12
             color: {
-                Custom.ThemeManager.palette;
+                Custom.ThemeManager.revision;
                 return Custom.ThemeManager.token("surface.backgroundRaised");
             }
             border.color: {
-                Custom.ThemeManager.palette;
+                Custom.ThemeManager.revision;
                 return Custom.ThemeManager.token("surface.border");
             }
 

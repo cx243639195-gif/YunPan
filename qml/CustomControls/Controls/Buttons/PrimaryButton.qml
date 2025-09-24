@@ -42,7 +42,7 @@ Button {
             }
 
             text: {
-                Custom.I18nManager.currentLanguage;
+                Custom.I18nManager.revision;
                 return translatedText();
             }
 

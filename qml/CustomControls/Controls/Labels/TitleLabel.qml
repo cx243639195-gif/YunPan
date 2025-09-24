@@ -10,7 +10,7 @@ Text {
     readonly property var themePalette: Custom.ThemeManager.palette
 
     text: {
-        Custom.I18nManager.currentLanguage;
+        Custom.I18nManager.revision;
         return Custom.I18nManager.tr(control.textKey, control.textKey);
     }
 

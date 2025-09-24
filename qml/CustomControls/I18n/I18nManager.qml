@@ -6,6 +6,8 @@ QtObject {
     id: i18n
 
     property string currentLanguage: I18nData.defaultLanguage()
+    property int revision: 0
+    property var _translationCache: Object.create(null)
 
     signal languageChanged(string language)
 
@@ -22,7 +24,6 @@ QtObject {
             return;
 
         currentLanguage = language;
-        languageChanged(language);
     }
 
     function toggleLanguage() {
@@ -35,6 +36,19 @@ QtObject {
     }
 
     function tr(key, fallback) {
-        return I18nData.translate(currentLanguage, key, fallback);
+        var cacheKey = key + "|" + (fallback !== undefined ? fallback : "");
+        var cached = _translationCache[cacheKey];
+        if (cached !== undefined)
+            return cached;
+
+        var value = I18nData.translate(currentLanguage, key, fallback);
+        _translationCache[cacheKey] = value;
+        return value;
+    }
+
+    onCurrentLanguageChanged: {
+        _translationCache = Object.create(null);
+        revision += 1;
+        languageChanged(currentLanguage);
     }
 }
