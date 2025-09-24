@@ -9,34 +9,23 @@ ApplicationWindow {
     width: 480
     height: 320
 
-    property string windowTitle: Custom.I18nManager.tr("labels.headline", "Custom Controls Library")
-    property color windowBackground: Custom.ThemeManager.token("surface.background")
-    property color panelBackground: Custom.ThemeManager.token("surface.backgroundRaised")
-    property color panelBorder: Custom.ThemeManager.token("surface.border")
-
-    function updateTitle() {
-        windowTitle = Custom.I18nManager.tr("labels.headline", "Custom Controls Library");
+    property int languageRevision: Custom.I18nManager.revision
+    property int themeRevision: Custom.ThemeManager.revision
+    property string windowTitle: {
+        languageRevision;
+        return Custom.I18nManager.tr("labels.headline", "Custom Controls Library");
     }
-
-    function updateThemeColors() {
-        windowBackground = Custom.ThemeManager.token("surface.background");
-        panelBackground = Custom.ThemeManager.token("surface.backgroundRaised");
-        panelBorder = Custom.ThemeManager.token("surface.border");
+    property color windowBackground: {
+        themeRevision;
+        return Custom.ThemeManager.token("surface.background");
     }
-
-    Component.onCompleted: {
-        updateTitle();
-        updateThemeColors();
+    property color panelBackground: {
+        themeRevision;
+        return Custom.ThemeManager.token("surface.backgroundRaised");
     }
-
-    Connections {
-        target: Custom.I18nManager
-        onLanguageChanged: updateTitle()
-    }
-
-    Connections {
-        target: Custom.ThemeManager
-        onThemeChanged: updateThemeColors()
+    property color panelBorder: {
+        themeRevision;
+        return Custom.ThemeManager.token("surface.border");
     }
 
     title: windowTitle
@@ -58,39 +47,19 @@ ApplicationWindow {
 
             Button {
                 id: toggleThemeButton
-                property string cachedText: Custom.I18nManager.tr("actions.toggleTheme", "Toggle theme")
-
-                function updateText() {
-                    cachedText = Custom.I18nManager.tr("actions.toggleTheme", "Toggle theme");
+                text: {
+                    window.languageRevision;
+                    return Custom.I18nManager.tr("actions.toggleTheme", "Toggle theme");
                 }
-
-                Component.onCompleted: updateText()
-
-                Connections {
-                    target: Custom.I18nManager
-                    onLanguageChanged: updateText()
-                }
-
-                text: cachedText
                 onClicked: Custom.ThemeManager.toggleTheme()
             }
 
             Button {
                 id: toggleLanguageButton
-                property string cachedText: Custom.I18nManager.tr("actions.toggleLanguage", "Switch language")
-
-                function updateText() {
-                    cachedText = Custom.I18nManager.tr("actions.toggleLanguage", "Switch language");
+                text: {
+                    window.languageRevision;
+                    return Custom.I18nManager.tr("actions.toggleLanguage", "Switch language");
                 }
-
-                Component.onCompleted: updateText()
-
-                Connections {
-                    target: Custom.I18nManager
-                    onLanguageChanged: updateText()
-                }
-
-                text: cachedText
                 onClicked: Custom.I18nManager.toggleLanguage()
             }
         }
