@@ -24,7 +24,9 @@ Item {
 
     width: implicitWidth
     height: implicitHeight
-    transformOrigin: Item.Center
+    layer.enabled: true
+    layer.smooth: true
+    layer.mipmap: false
 
     Canvas {
         id: arcCanvas
@@ -33,6 +35,12 @@ Item {
         smooth: true
         renderTarget: Canvas.Image
         opacity: 1.0
+        transform: Rotation {
+            id: spinTransform
+            origin.x: width / 2
+            origin.y: height / 2
+            angle: spinner._baseRotation
+        }
 
         onPaint: {
             var ctx = getContext("2d");
@@ -55,10 +63,9 @@ Item {
         }
     }
 
-    NumberAnimation {
+    RotationAnimator {
         id: spinAnimation
-        target: spinner
-        property: "rotation"
+        target: spinTransform
         from: spinner._baseRotation
         to: spinner._baseRotation + 360
         duration: spinner.rotationDuration
@@ -71,16 +78,14 @@ Item {
         loops: Animation.Infinite
         running: false
 
-        NumberAnimation {
+        OpacityAnimator {
             target: arcCanvas
-            property: "opacity"
             to: spinner.minOpacity
             duration: spinner.pulseDuration / 2
             easing.type: Easing.InOutQuad
         }
-        NumberAnimation {
+        OpacityAnimator {
             target: arcCanvas
-            property: "opacity"
             to: 1.0
             duration: spinner.pulseDuration / 2
             easing.type: Easing.InOutQuad
@@ -93,12 +98,12 @@ Item {
 
     function updateAnimations() {
         var shouldRun = spinner._active;
+        if (shouldRun && !spinAnimation.running)
+            spinTransform.angle = spinner._baseRotation;
         spinAnimation.running = shouldRun;
         pulseAnimation.running = shouldRun;
-        if (shouldRun && spinner.rotation !== spinner._baseRotation)
-            spinner.rotation = spinner._baseRotation;
         if (!shouldRun) {
-            spinner.rotation = spinner._baseRotation;
+            spinTransform.angle = spinner._baseRotation;
             arcCanvas.opacity = 1.0;
         }
     }
@@ -113,7 +118,7 @@ Item {
     onStrokeRatioChanged: requestRedraw()
 
     Component.onCompleted: {
-        spinner.rotation = spinner._baseRotation;
+        spinTransform.angle = spinner._baseRotation;
         requestRedraw();
         updateAnimations();
     }
