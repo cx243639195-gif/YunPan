@@ -42,15 +42,19 @@ Button {
 
     contentItem: Row {
         id: layout
-        spacing: control.busy ? 8 : 0
         anchors.centerIn: parent
+        spacing: spinnerLoader.active && spinnerLoader.item ? 8 : 0
 
-        Custom.LoadingSpinner {
-            visible: control.busy
-            running: control.busy
-            color: control.foregroundColor
-            implicitWidth: 16
-            implicitHeight: 16
+        Loader {
+            id: spinnerLoader
+            active: control.busy
+            sourceComponent: Component {
+                Custom.LoadingSpinner {
+                    color: control.foregroundColor
+                    implicitWidth: 16
+                    implicitHeight: 16
+                }
+            }
         }
 
         Text {

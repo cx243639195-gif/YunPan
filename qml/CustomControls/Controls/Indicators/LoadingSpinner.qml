@@ -1,5 +1,4 @@
 import QtQuick 2.15
-import QtQuick.Shapes 1.15
 import "LoadingSpinnerLogic.js" as Logic
 
 Item {
@@ -20,43 +19,48 @@ Item {
     readonly property real _diameter: Math.min(width, height)
     readonly property real _strokeWidth: Logic.strokeWidthFor(_diameter, strokeRatio)
     readonly property real _radius: Math.max(0, (_diameter - _strokeWidth) / 2)
+    readonly property real _sweepRadians: sweepAngle * Math.PI / 180
+    readonly property real _baseRotation: -90
 
     width: implicitWidth
     height: implicitHeight
     transformOrigin: Item.Center
 
-    Shape {
-        id: arcShape
+    Canvas {
+        id: arcCanvas
         anchors.fill: parent
         antialiasing: true
+        smooth: true
+        renderTarget: Canvas.Image
         opacity: 1.0
 
-        ShapePath {
-            id: arcPath
-            strokeWidth: spinner._strokeWidth
-            strokeColor: spinner.color
-            fillColor: "transparent"
-            capStyle: ShapePath.RoundCap
-            startX: spinner.width / 2 + spinner._radius
-            startY: spinner.height / 2
+        onPaint: {
+            var ctx = getContext("2d");
+            ctx.reset();
+            ctx.clearRect(0, 0, width, height);
 
-            PathMove { x: spinner.width / 2 + spinner._radius; y: spinner.height / 2 }
-            PathAngleArc {
-                centerX: spinner.width / 2
-                centerY: spinner.height / 2
-                radiusX: spinner._radius
-                radiusY: spinner._radius
-                startAngle: -spinner.sweepAngle / 2
-                sweepAngle: spinner.sweepAngle
-            }
+            if (spinner._radius <= 0 || spinner._strokeWidth <= 0)
+                return;
+
+            ctx.translate(width / 2, height / 2);
+            ctx.beginPath();
+            ctx.lineWidth = spinner._strokeWidth;
+            ctx.lineCap = "round";
+            ctx.strokeStyle = spinner.color;
+
+            var startAngle = -spinner._sweepRadians / 2;
+            var endAngle = spinner._sweepRadians / 2;
+            ctx.arc(0, 0, spinner._radius, startAngle, endAngle, false);
+            ctx.stroke();
         }
     }
 
-    RotationAnimator {
+    NumberAnimation {
         id: spinAnimation
         target: spinner
-        from: -90
-        to: 270
+        property: "rotation"
+        from: spinner._baseRotation
+        to: spinner._baseRotation + 360
         duration: spinner.rotationDuration
         loops: Animation.Infinite
         running: false
@@ -67,35 +71,50 @@ Item {
         loops: Animation.Infinite
         running: false
 
-        OpacityAnimator {
-            target: arcShape
+        NumberAnimation {
+            target: arcCanvas
+            property: "opacity"
             to: spinner.minOpacity
             duration: spinner.pulseDuration / 2
             easing.type: Easing.InOutQuad
         }
-        OpacityAnimator {
-            target: arcShape
+        NumberAnimation {
+            target: arcCanvas
+            property: "opacity"
             to: 1.0
             duration: spinner.pulseDuration / 2
             easing.type: Easing.InOutQuad
         }
     }
 
+    function requestRedraw() {
+        arcCanvas.requestPaint();
+    }
+
     function updateAnimations() {
         var shouldRun = spinner._active;
         spinAnimation.running = shouldRun;
         pulseAnimation.running = shouldRun;
-        if (shouldRun && spinner.rotation !== -90)
-            spinner.rotation = -90;
+        if (shouldRun && spinner.rotation !== spinner._baseRotation)
+            spinner.rotation = spinner._baseRotation;
         if (!shouldRun) {
-            spinner.rotation = -90;
-            arcShape.opacity = 1.0;
+            spinner.rotation = spinner._baseRotation;
+            arcCanvas.opacity = 1.0;
         }
     }
 
     onRunningChanged: updateAnimations()
     onVisibleChanged: updateAnimations()
     onWindowChanged: updateAnimations()
+    onColorChanged: requestRedraw()
+    onWidthChanged: requestRedraw()
+    onHeightChanged: requestRedraw()
+    onSweepAngleChanged: requestRedraw()
+    onStrokeRatioChanged: requestRedraw()
 
-    Component.onCompleted: updateAnimations()
+    Component.onCompleted: {
+        spinner.rotation = spinner._baseRotation;
+        requestRedraw();
+        updateAnimations();
+    }
 }
