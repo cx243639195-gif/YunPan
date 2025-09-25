@@ -1,5 +1,4 @@
 import QtQuick 2.15
-import QtQuick.Shapes 1.15
 import "LoadingSpinnerLogic.js" as Logic
 
 Item {
@@ -23,36 +22,51 @@ Item {
 
     width: implicitWidth
     height: implicitHeight
+    transformOrigin: Item.Center
 
-    Shape {
-        id: arcShape
+    function scheduleRepaint() {
+        if (arcCanvas.available)
+            arcCanvas.requestPaint();
+    }
+
+    Canvas {
+        id: arcCanvas
         anchors.fill: parent
-        antialiasing: true
+        smooth: true
         opacity: 1.0
-        transformOrigin: Item.Center
+        renderTarget: Canvas.FramebufferObject
 
-        ShapePath {
-            strokeWidth: spinner._strokeWidth
-            strokeColor: spinner.color
-            fillColor: "transparent"
-            capStyle: ShapePath.RoundCap
-            startX: arcShape.width / 2 + spinner._radius
-            startY: arcShape.height / 2
+        onPaint: {
+            var ctx = getContext("2d");
+            ctx.save();
+            ctx.clearRect(0, 0, width, height);
+            ctx.translate(width / 2, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.beginPath();
+            ctx.lineWidth = spinner._strokeWidth;
+            ctx.lineCap = "round";
+            ctx.strokeStyle = spinner.color;
+            var endAngle = Math.max(0, spinner.sweepAngle) * Math.PI / 180;
+            ctx.arc(0, 0, spinner._radius, 0, endAngle, false);
+            ctx.stroke();
+            ctx.restore();
+        }
 
-            PathAngleArc {
-                centerX: arcShape.width / 2
-                centerY: arcShape.height / 2
-                radiusX: spinner._radius
-                radiusY: spinner._radius
-                startAngle: -90
-                sweepAngle: spinner.sweepAngle
-            }
+        onAvailableChanged: scheduleRepaint()
+
+        Connections {
+            target: spinner
+            function onColorChanged() { spinner.scheduleRepaint(); }
+            function onWidthChanged() { spinner.scheduleRepaint(); }
+            function onHeightChanged() { spinner.scheduleRepaint(); }
+            function onSweepAngleChanged() { spinner.scheduleRepaint(); }
+            function onStrokeRatioChanged() { spinner.scheduleRepaint(); }
         }
     }
 
     NumberAnimation {
         id: spinAnimation
-        target: arcShape
+        target: spinner
         property: "rotation"
         from: 0
         to: 360
@@ -66,15 +80,15 @@ Item {
         loops: Animation.Infinite
         running: false
 
-        PropertyAnimation {
-            target: arcShape
+        NumberAnimation {
+            target: arcCanvas
             property: "opacity"
             to: spinner.minOpacity
             duration: spinner.pulseDuration / 2
             easing.type: Easing.InOutQuad
         }
-        PropertyAnimation {
-            target: arcShape
+        NumberAnimation {
+            target: arcCanvas
             property: "opacity"
             to: 1.0
             duration: spinner.pulseDuration / 2
@@ -87,8 +101,8 @@ Item {
         spinAnimation.running = shouldRun;
         pulseAnimation.running = shouldRun;
         if (!shouldRun) {
-            arcShape.rotation = 0;
-            arcShape.opacity = 1.0;
+            spinner.rotation = 0;
+            arcCanvas.opacity = 1.0;
         }
     }
 
@@ -96,5 +110,8 @@ Item {
     onVisibleChanged: updateAnimations()
     onWindowChanged: updateAnimations()
 
-    Component.onCompleted: updateAnimations()
+    Component.onCompleted: {
+        scheduleRepaint();
+        updateAnimations();
+    }
 }
