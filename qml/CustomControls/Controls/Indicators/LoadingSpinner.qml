@@ -29,7 +29,6 @@ Item {
         id: arcShape
         anchors.fill: parent
         antialiasing: true
-        preferredRendererType: Shape.CurveRenderer
         opacity: 1.0
 
         ShapePath {
