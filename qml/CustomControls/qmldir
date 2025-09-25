@@ -3,3 +3,4 @@ singleton ThemeManager 1.0 Theme/ThemeManager.qml
 singleton I18nManager 1.0 I18n/I18nManager.qml
 PrimaryButton 1.0 Controls/Buttons/PrimaryButton.qml
 TitleLabel 1.0 Controls/Labels/TitleLabel.qml
+LoadingSpinner 1.0 Controls/Indicators/LoadingSpinner.qml

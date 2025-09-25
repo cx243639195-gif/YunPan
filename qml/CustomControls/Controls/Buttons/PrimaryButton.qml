@@ -40,9 +40,10 @@ Button {
         spacing: control.busy ? 8 : 0
         anchors.centerIn: parent
 
-        BusyIndicator {
+        Custom.LoadingSpinner {
             visible: control.busy
             running: control.busy
+            color: control.foregroundColor
             implicitWidth: 16
             implicitHeight: 16
         }
