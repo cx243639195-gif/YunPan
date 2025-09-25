@@ -23,6 +23,9 @@ Item {
     width: implicitWidth
     height: implicitHeight
     transformOrigin: Item.Center
+    layer.enabled: true
+    layer.smooth: true
+    layer.mipmap: true
 
     function scheduleRepaint() {
         if (arcCanvas.available)
@@ -64,10 +67,9 @@ Item {
         }
     }
 
-    NumberAnimation {
+    RotationAnimator {
         id: spinAnimation
         target: spinner
-        property: "rotation"
         from: 0
         to: 360
         duration: spinner.rotationDuration
@@ -80,16 +82,14 @@ Item {
         loops: Animation.Infinite
         running: false
 
-        NumberAnimation {
+        OpacityAnimator {
             target: arcCanvas
-            property: "opacity"
             to: spinner.minOpacity
             duration: spinner.pulseDuration / 2
             easing.type: Easing.InOutQuad
         }
-        NumberAnimation {
+        OpacityAnimator {
             target: arcCanvas
-            property: "opacity"
             to: 1.0
             duration: spinner.pulseDuration / 2
             easing.type: Easing.InOutQuad
@@ -109,6 +109,7 @@ Item {
     onRunningChanged: updateAnimations()
     onVisibleChanged: updateAnimations()
     onWindowChanged: updateAnimations()
+    onActiveFocusChanged: updateAnimations()
 
     Component.onCompleted: {
         scheduleRepaint();
