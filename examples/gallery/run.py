@@ -4,35 +4,67 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Tuple
+from typing import Callable, Tuple
 
 QT_BINDING = ""
 
-try:  # Prefer PySide6 because it matches Qt's official Python binding.
-    from PySide6.QtCore import QUrl
-    from PySide6.QtGui import QGuiApplication
-    from PySide6.QtQml import QQmlApplicationEngine
 
-    QT_BINDING = "PySide6"
-except ImportError as pyside_error:  # pragma: no cover - informative fallback path
+def _load_binding():
+    """Import a Qt for Python binding and expose a unified API surface."""
+
+    errors = {}
+
+    def _record(name: str, error: Exception) -> None:
+        errors[name] = error
+
+    # Try modern Qt 6 bindings first.
+    try:  # Prefer PySide6 because it matches Qt's official Python binding.
+        from PySide6.QtCore import QUrl  # type: ignore
+        from PySide6.QtGui import QGuiApplication  # type: ignore
+        from PySide6.QtQml import QQmlApplicationEngine  # type: ignore
+
+        return "PySide6", QUrl, QGuiApplication, QQmlApplicationEngine
+    except ImportError as error:  # pragma: no cover - informative fallback path
+        _record("PySide6", error)
+
     try:
-        from PyQt6.QtCore import QUrl
-        from PyQt6.QtGui import QGuiApplication
-        from PyQt6.QtQml import QQmlApplicationEngine
+        from PyQt6.QtCore import QUrl  # type: ignore
+        from PyQt6.QtGui import QGuiApplication  # type: ignore
+        from PyQt6.QtQml import QQmlApplicationEngine  # type: ignore
 
-        QT_BINDING = "PyQt6"
-    except ImportError as pyqt_error:  # pragma: no cover - informative fallback path
-        missing = ["PySide6", "PyQt6"]
-        message = (
-            "Unable to import any Qt for Python binding.\n"
-            "Install one of the following packages and re-run the script:\n"
-            f"  pip install {missing[0]}\n"
-            f"  pip install {missing[1]}\n"
-            "Alternatively run the example with qmlscene after exporting QML2_IMPORT_PATH.\n"
-            f"PySide6 import error: {pyside_error}\n"
-            f"PyQt6 import error: {pyqt_error}"
-        )
-        raise SystemExit(message) from pyqt_error
+        return "PyQt6", QUrl, QGuiApplication, QQmlApplicationEngine
+    except ImportError as error:  # pragma: no cover - informative fallback path
+        _record("PyQt6", error)
+
+    # Fall back to widely installed Qt 5 bindings so the script can run on
+    # systems that have not migrated to Qt 6 yet.
+    try:
+        from PySide2.QtCore import QUrl  # type: ignore
+        from PySide2.QtGui import QGuiApplication  # type: ignore
+        from PySide2.QtQml import QQmlApplicationEngine  # type: ignore
+
+        return "PySide2", QUrl, QGuiApplication, QQmlApplicationEngine
+    except ImportError as error:  # pragma: no cover - informative fallback path
+        _record("PySide2", error)
+
+    try:
+        from PyQt5.QtCore import QUrl  # type: ignore
+        from PyQt5.QtGui import QGuiApplication  # type: ignore
+        from PyQt5.QtQml import QQmlApplicationEngine  # type: ignore
+
+        return "PyQt5", QUrl, QGuiApplication, QQmlApplicationEngine
+    except ImportError as error:  # pragma: no cover - informative fallback path
+        _record("PyQt5", error)
+
+    missing = ["PySide6", "PyQt6", "PySide2", "PyQt5"]
+    message = (
+        "Unable to import any Qt for Python binding.\n"
+        "Install one of the following packages and re-run the script:\n"
+        + "\n".join(f"  pip install {name}" for name in missing)
+        + "\nAlternatively run the example with qmlscene after exporting QML2_IMPORT_PATH.\n"
+        + "\n".join(f"{name} import error: {errors.get(name)}" for name in missing)
+    )
+    raise SystemExit(message)
 
 
 def _resolve_paths() -> Tuple[Path, Path]:
@@ -47,6 +79,9 @@ def main() -> int:
     """Launch the QML gallery example."""
     gallery_dir, qml_dir = _resolve_paths()
 
+    global QT_BINDING
+    QT_BINDING, QUrl, QGuiApplication, QQmlApplicationEngine = _load_binding()
+
     app = QGuiApplication(sys.argv)
     engine = QQmlApplicationEngine()
     engine.addImportPath(str(qml_dir))
@@ -55,9 +90,17 @@ def main() -> int:
     engine.load(QUrl.fromLocalFile(str(qml_file)))
 
     if not engine.rootObjects():
+        for warning in engine.warnings():
+            print(warning.toString())
         return -1
 
-    return app.exec()
+    exec_fn: Callable[[], int]
+    if hasattr(app, "exec"):
+        exec_fn = app.exec  # type: ignore[attr-defined]
+    else:
+        exec_fn = app.exec_  # type: ignore[attr-defined]
+
+    return exec_fn()
 
 
 if __name__ == "__main__":

@@ -53,14 +53,14 @@ YunPan/
 
 2. **使用 Python 启动示例窗口**
 
-   如果更习惯以 Python 方式运行，可安装 [PySide6](https://doc.qt.io/qtforpython/) 或 [PyQt6](https://riverbankcomputing.com/software/pyqt/intro) 并使用仓库中提供的脚本：
+   如果更习惯以 Python 方式运行，可安装 [PySide6](https://doc.qt.io/qtforpython/)、[PyQt6](https://riverbankcomputing.com/software/pyqt/intro)、[PySide2](https://wiki.qt.io/Qt_for_Python/GettingStarted) 或 [PyQt5](https://riverbankcomputing.com/software/pyqt/intro) 并使用仓库中提供的脚本：
 
    ```bash
-   pip install PySide6  # 或者：pip install PyQt6
+   pip install PySide6  # 也可以安装 PyQt6 / PySide2 / PyQt5
    python examples/gallery/run.py
    ```
 
-   脚本会自动将仓库根目录下的 `qml/` 加入 QML 导入路径，然后载入 `examples/gallery/main.qml` 展示控件库；如果上述库均未安装，则会提示安装命令或改用 `qmlscene` 运行。
+   脚本会自动将仓库根目录下的 `qml/` 加入 QML 导入路径，然后载入 `examples/gallery/main.qml` 展示控件库；如果上述库均未安装，则会提示安装命令或改用 `qmlscene` 运行，并在加载失败时输出详细的 QML 警告信息，便于排查问题。
 
 3. **扩展主题**
 
