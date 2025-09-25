@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import QtQuick.Shapes 1.15
 import "LoadingSpinnerLogic.js" as Logic
 
 Item {
@@ -19,47 +20,47 @@ Item {
     readonly property real _diameter: Math.min(width, height)
     readonly property real _strokeWidth: Logic.strokeWidthFor(_diameter, strokeRatio)
     readonly property real _radius: Math.max(0, (_diameter - _strokeWidth) / 2)
-    readonly property real _sweepRadians: sweepAngle * Math.PI / 180
     readonly property real _baseRotation: -90
+    readonly property real _startAngle: -sweepAngle / 2
+    readonly property real _startRadians: _startAngle * Math.PI / 180
+    readonly property bool _hasArc: _radius > 0 && _strokeWidth > 0
 
     width: implicitWidth
     height: implicitHeight
-    layer.enabled: true
-    layer.smooth: true
-    layer.mipmap: false
 
-    Canvas {
-        id: arcCanvas
+    antialiasing: true
+
+    transform: Rotation {
+        id: spinTransform
+        origin.x: spinner.width / 2
+        origin.y: spinner.height / 2
+        angle: spinner._baseRotation
+    }
+
+    Shape {
+        id: arcShape
         anchors.fill: parent
-        antialiasing: true
+        visible: spinner._hasArc
         smooth: true
-        renderTarget: Canvas.Image
         opacity: 1.0
-        transform: Rotation {
-            id: spinTransform
-            origin.x: width / 2
-            origin.y: height / 2
-            angle: spinner._baseRotation
-        }
 
-        onPaint: {
-            var ctx = getContext("2d");
-            ctx.reset();
-            ctx.clearRect(0, 0, width, height);
+        ShapePath {
+            strokeWidth: spinner._strokeWidth
+            strokeColor: spinner.color
+            capStyle: ShapePath.RoundCap
+            joinStyle: ShapePath.RoundJoin
+            fillColor: "transparent"
+            startX: spinner.width / 2 + spinner._radius * Math.cos(spinner._startRadians)
+            startY: spinner.height / 2 + spinner._radius * Math.sin(spinner._startRadians)
 
-            if (spinner._radius <= 0 || spinner._strokeWidth <= 0)
-                return;
-
-            ctx.translate(width / 2, height / 2);
-            ctx.beginPath();
-            ctx.lineWidth = spinner._strokeWidth;
-            ctx.lineCap = "round";
-            ctx.strokeStyle = spinner.color;
-
-            var startAngle = -spinner._sweepRadians / 2;
-            var endAngle = spinner._sweepRadians / 2;
-            ctx.arc(0, 0, spinner._radius, startAngle, endAngle, false);
-            ctx.stroke();
+            PathAngleArc {
+                centerX: spinner.width / 2
+                centerY: spinner.height / 2
+                radiusX: spinner._radius
+                radiusY: spinner._radius
+                startAngle: spinner._startAngle
+                sweepAngle: spinner.sweepAngle
+            }
         }
     }
 
@@ -79,21 +80,17 @@ Item {
         running: false
 
         OpacityAnimator {
-            target: arcCanvas
+            target: arcShape
             to: spinner.minOpacity
             duration: spinner.pulseDuration / 2
             easing.type: Easing.InOutQuad
         }
         OpacityAnimator {
-            target: arcCanvas
+            target: arcShape
             to: 1.0
             duration: spinner.pulseDuration / 2
             easing.type: Easing.InOutQuad
         }
-    }
-
-    function requestRedraw() {
-        arcCanvas.requestPaint();
     }
 
     function updateAnimations() {
@@ -104,22 +101,16 @@ Item {
         pulseAnimation.running = shouldRun;
         if (!shouldRun) {
             spinTransform.angle = spinner._baseRotation;
-            arcCanvas.opacity = 1.0;
+            arcShape.opacity = 1.0;
         }
     }
 
     onRunningChanged: updateAnimations()
     onVisibleChanged: updateAnimations()
     onWindowChanged: updateAnimations()
-    onColorChanged: requestRedraw()
-    onWidthChanged: requestRedraw()
-    onHeightChanged: requestRedraw()
-    onSweepAngleChanged: requestRedraw()
-    onStrokeRatioChanged: requestRedraw()
 
     Component.onCompleted: {
         spinTransform.angle = spinner._baseRotation;
-        requestRedraw();
         updateAnimations();
     }
 }
