@@ -86,11 +86,28 @@ def main() -> int:
     engine = QQmlApplicationEngine()
     engine.addImportPath(str(qml_dir))
 
+    collected_warnings = []
+    warnings_attr = getattr(engine, "warnings", None)
+    if warnings_attr is not None and hasattr(warnings_attr, "connect"):
+        # PyQt exposes QQmlApplicationEngine.warnings as a signal rather than a
+        # callable, so capture anything emitted while the engine loads.
+        def _collect_warnings(errors):
+            collected_warnings.extend(errors)
+
+        warnings_attr.connect(_collect_warnings)
+
     qml_file = gallery_dir / "main.qml"
     engine.load(QUrl.fromLocalFile(str(qml_file)))
 
     if not engine.rootObjects():
-        for warning in engine.warnings():
+        warnings_list = collected_warnings
+        if not warnings_list and callable(warnings_attr):
+            try:
+                warnings_list = list(warnings_attr())
+            except TypeError:
+                warnings_list = []
+
+        for warning in warnings_list:
             print(warning.toString())
         return -1
 
