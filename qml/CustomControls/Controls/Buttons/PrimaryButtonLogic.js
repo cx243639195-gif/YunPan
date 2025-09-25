@@ -1,4 +1,31 @@
 .pragma library
+.import "../../I18n/I18nData.js" as I18nData
+
+I18nData.registerTranslations("en", {
+    buttons: {
+        primary: {
+            default: "Confirm",
+            loading: "Loading..."
+        },
+        secondary: {
+            default: "Cancel",
+            loading: "Working..."
+        }
+    }
+});
+
+I18nData.registerTranslations("zh_CN", {
+    buttons: {
+        primary: {
+            default: "确认",
+            loading: "加载中..."
+        },
+        secondary: {
+            default: "取消",
+            loading: "处理中..."
+        }
+    }
+});
 
 function colorSet(palette) {
     var surface = palette && palette.surface ? palette.surface : {};
@@ -38,17 +65,30 @@ function opacity(enabled) {
     return enabled ? 1.0 : 0.7;
 }
 
-function displayText(i18nManager, revision, textKey, busy) {
-    var fallback = busy ? "Loading..." : textKey;
+function defaultBusyKey() {
+    return "buttons.primary.loading";
+}
+
+function busyFallback() {
+    return I18nData.translate(I18nData.defaultLanguage(), defaultBusyKey(), "Loading...");
+}
+
+function defaultTextFallback(key) {
+    return I18nData.translate(I18nData.defaultLanguage(), key, key);
+}
+
+function displayText(i18nManager, revision, textKey, textFallback, busy, busyKey, busyFallbackText) {
+    var fallback = busy
+            ? (busyFallbackText || busyKey || textFallback || textKey)
+            : (textFallback || textKey);
 
     if (!i18nManager)
         return fallback;
 
     void revision;
 
-    return busy
-            ? i18nManager.tr("buttons.primary.loading", fallback)
-            : i18nManager.tr(textKey, fallback);
+    var lookupKey = busy && busyKey ? busyKey : textKey;
+    return i18nManager.tr(lookupKey, fallback);
 }
 
 function horizontalPadding() { return 20; }

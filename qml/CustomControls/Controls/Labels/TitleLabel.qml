@@ -11,7 +11,7 @@ Text {
     property var themePalette: Custom.ThemeManager.palette
     property string displayText: {
         languageRevision;
-        return Custom.I18nManager.tr(control.textKey, control.textKey);
+        return Custom.I18nManager.tr(control.textKey, Logic.defaultText(control.textKey));
     }
     property color displayColor: {
         themeRevision;

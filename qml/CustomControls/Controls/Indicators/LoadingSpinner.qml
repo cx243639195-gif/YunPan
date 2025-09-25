@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import QtQuick.Shapes 1.15
 import "LoadingSpinnerLogic.js" as Logic
 
 Item {
@@ -8,73 +9,92 @@ Item {
     property color color: "#ffffff"
     property real minOpacity: Logic.minOpacity()
     property real strokeRatio: Logic.strokeRatio()
-    property real sweepRatio: Logic.sweepRatio()
-    property int segmentCount: Logic.segmentCount()
-    property int stepInterval: Logic.stepInterval()
-
-    property int _phase: 0
+    property real sweepAngle: Logic.sweepAngle()
+    property int rotationDuration: Logic.rotationDuration()
+    property int pulseDuration: Logic.pulseDuration()
 
     implicitWidth: Logic.defaultDiameter()
     implicitHeight: Logic.defaultDiameter()
+
+    readonly property bool _active: running && visible && window !== null
+    readonly property real _diameter: Math.min(width, height)
+    readonly property real _strokeWidth: Logic.strokeWidthFor(_diameter, strokeRatio)
+    readonly property real _radius: Math.max(0, (_diameter - _strokeWidth) / 2)
+
     width: implicitWidth
     height: implicitHeight
 
-    Canvas {
-        id: canvas
+    Shape {
+        id: arcShape
         anchors.fill: parent
-        renderTarget: Canvas.FramebufferObject
+        antialiasing: true
+        opacity: 1.0
+        transformOrigin: Item.Center
 
-        onPaint: {
-            var count = spinner.segmentCount > 0 ? spinner.segmentCount : 1;
-            var ctx = getContext("2d");
-            Logic.paint(ctx, width, height, spinner.color, count, spinner._phase,
-                        spinner.minOpacity, spinner.strokeRatio, spinner.sweepRatio);
+        ShapePath {
+            strokeWidth: spinner._strokeWidth
+            strokeColor: spinner.color
+            fillColor: "transparent"
+            capStyle: ShapePath.RoundCap
+            startX: arcShape.width / 2 + spinner._radius
+            startY: arcShape.height / 2
+
+            PathAngleArc {
+                centerX: arcShape.width / 2
+                centerY: arcShape.height / 2
+                radiusX: spinner._radius
+                radiusY: spinner._radius
+                startAngle: -90
+                sweepAngle: spinner.sweepAngle
+            }
         }
     }
 
-    Timer {
-        id: ticker
-        interval: spinner.stepInterval
-        repeat: true
+    NumberAnimation {
+        id: spinAnimation
+        target: arcShape
+        property: "rotation"
+        from: 0
+        to: 360
+        duration: spinner.rotationDuration
+        loops: Animation.Infinite
+        running: false
+    }
+
+    SequentialAnimation {
+        id: pulseAnimation
+        loops: Animation.Infinite
         running: false
 
-        onTriggered: {
-            var count = spinner.segmentCount > 0 ? spinner.segmentCount : 1;
-            spinner._phase = Logic.nextPhase(spinner._phase, count);
-            canvas.requestPaint();
+        PropertyAnimation {
+            target: arcShape
+            property: "opacity"
+            to: spinner.minOpacity
+            duration: spinner.pulseDuration / 2
+            easing.type: Easing.InOutQuad
+        }
+        PropertyAnimation {
+            target: arcShape
+            property: "opacity"
+            to: 1.0
+            duration: spinner.pulseDuration / 2
+            easing.type: Easing.InOutQuad
         }
     }
 
-    function updateTicker() {
-        ticker.running = spinner.running && spinner.visible && spinner.window !== null;
-    }
-
-    onRunningChanged: updateTicker()
-    onVisibleChanged: {
-        updateTicker();
-        if (spinner.visible)
-            canvas.requestPaint();
-    }
-    onWindowChanged: updateTicker()
-
-    onWidthChanged: canvas.requestPaint()
-    onHeightChanged: canvas.requestPaint()
-    onColorChanged: canvas.requestPaint()
-    onMinOpacityChanged: canvas.requestPaint()
-    onStrokeRatioChanged: canvas.requestPaint()
-    onSweepRatioChanged: canvas.requestPaint()
-    onSegmentCountChanged: {
-        if (spinner.segmentCount <= 0) {
-            spinner._phase = 0;
-        } else if (spinner._phase >= spinner.segmentCount) {
-            spinner._phase = spinner._phase % spinner.segmentCount;
+    function updateAnimations() {
+        var shouldRun = spinner._active;
+        spinAnimation.running = shouldRun;
+        pulseAnimation.running = shouldRun;
+        if (!shouldRun) {
+            arcShape.rotation = 0;
+            arcShape.opacity = 1.0;
         }
-        canvas.requestPaint();
-        updateTicker();
     }
 
-    Component.onCompleted: {
-        canvas.requestPaint();
-        updateTicker();
-    }
+    onRunningChanged: updateAnimations()
+    onVisibleChanged: updateAnimations()
+    onWindowChanged: updateAnimations()
+
+    Component.onCompleted: updateAnimations()
 }

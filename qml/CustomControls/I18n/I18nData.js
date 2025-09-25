@@ -1,48 +1,46 @@
 .pragma library
 
-var translations = {
-    "en": {
-        languageName: "English",
-        buttons: {
-            primary: {
-                default: "Confirm",
-                loading: "Loading..."
-            },
-            secondary: {
-                default: "Cancel"
-            }
-        },
-        labels: {
-            headline: "Custom Controls Library"
-        },
-        actions: {
-            toggleTheme: "Toggle theme",
-            toggleLanguage: "Switch language"
-        }
-    },
-    "zh_CN": {
-        languageName: "简体中文",
-        buttons: {
-            primary: {
-                default: "确认",
-                loading: "加载中..."
-            },
-            secondary: {
-                default: "取消"
-            }
-        },
-        labels: {
-            headline: "自定义控件库"
-        },
-        actions: {
-            toggleTheme: "切换主题",
-            toggleLanguage: "切换语言"
+var translations = Object.create(null);
+var defaultCode = "en";
+
+function ensureLanguage(code) {
+    if (!code)
+        return;
+    if (!Object.prototype.hasOwnProperty.call(translations, code))
+        translations[code] = Object.create(null);
+}
+
+function mergeInto(target, source) {
+    for (var key in source) {
+        if (!Object.prototype.hasOwnProperty.call(source, key))
+            continue;
+        var value = source[key];
+        if (value && typeof value === "object" && !Array.isArray(value)) {
+            if (!target[key] || typeof target[key] !== "object")
+                target[key] = Object.create(null);
+            mergeInto(target[key], value);
+        } else {
+            target[key] = value;
         }
     }
-};
+}
+
+function registerTranslations(code, entries) {
+    if (!code || !entries)
+        return;
+    ensureLanguage(code);
+    mergeInto(translations[code], entries);
+}
+
+function setDefaultLanguage(code) {
+    if (!code)
+        return;
+    ensureLanguage(code);
+    defaultCode = code;
+}
 
 function defaultLanguage() {
-    return "en";
+    return defaultCode;
 }
 
 function hasLanguage(code) {
@@ -53,19 +51,38 @@ function languageCodes() {
     return Object.keys(translations);
 }
 
-function translate(code, path, fallback) {
-    if (!hasLanguage(code))
-        return fallback !== undefined ? fallback : path;
-
-    var section = translations[code];
+function resolve(root, path) {
+    if (!root)
+        return undefined;
     var parts = path.split(".");
+    var current = root;
     for (var i = 0; i < parts.length; ++i) {
-        if (section === undefined || section === null)
-            break;
-        section = section[parts[i]];
+        if (current === undefined || current === null)
+            return undefined;
+        current = current[parts[i]];
+    }
+    return current;
+}
+
+function translate(code, path, fallback) {
+    var language = hasLanguage(code) ? code : defaultCode;
+    var value = resolve(translations[language], path);
+    if (value !== undefined)
+        return value;
+
+    if (language !== defaultCode) {
+        value = resolve(translations[defaultCode], path);
+        if (value !== undefined)
+            return value;
     }
 
-    if (section === undefined || section === null)
-        return fallback !== undefined ? fallback : path;
-    return section;
+    return fallback !== undefined ? fallback : path;
 }
+
+registerTranslations("en", {
+    languageName: "English"
+});
+
+registerTranslations("zh_CN", {
+    languageName: "简体中文"
+});

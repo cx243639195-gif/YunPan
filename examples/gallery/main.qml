@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import CustomControls 1.0 as Custom
+import "Translations.js" as GalleryStrings
 
 ApplicationWindow {
     id: window
@@ -9,6 +10,7 @@ ApplicationWindow {
     width: 480
     height: 320
 
+    readonly property bool _stringsLoaded: GalleryStrings !== undefined
     property int languageRevision: Custom.I18nManager.revision
     property int themeRevision: Custom.ThemeManager.revision
     property string windowTitle: {
@@ -81,6 +83,7 @@ ApplicationWindow {
 
                 Custom.PrimaryButton {
                     textKey: "buttons.secondary.default"
+                    busyTextKey: "buttons.secondary.loading"
                     busy: true
                 }
             }

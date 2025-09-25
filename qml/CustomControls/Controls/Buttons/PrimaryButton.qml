@@ -7,7 +7,10 @@ Button {
     id: control
 
     property string textKey: "buttons.primary.default"
+    property string textFallback: Logic.defaultTextFallback(control.textKey)
     property bool busy: false
+    property string busyTextKey: Logic.defaultBusyKey()
+    property string busyTextFallback: Logic.busyFallback()
 
     property int languageRevision: Custom.I18nManager.revision
     property int themeRevision: Custom.ThemeManager.revision
@@ -17,7 +20,9 @@ Button {
         return Logic.colorSet(themePalette);
     }
     property string displayText: Logic.displayText(Custom.I18nManager, languageRevision,
-                                                  control.textKey, control.busy)
+                                                  control.textKey, control.textFallback,
+                                                  control.busy, control.busyTextKey,
+                                                  control.busyTextFallback)
     property color backgroundColor: Logic.backgroundColor(colorRoles, control.hovered,
                                                           control.down, control.enabled)
     property color foregroundColor: Logic.foregroundColor(colorRoles, control.enabled)
