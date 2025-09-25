@@ -11,6 +11,7 @@ Button {
     property bool busy: false
     property string busyTextKey: Logic.defaultBusyKey()
     property string busyTextFallback: Logic.busyFallback()
+    property int busyIndicatorSize: 16
 
     property int languageRevision: Custom.I18nManager.revision
     property int themeRevision: Custom.ThemeManager.revision
@@ -43,17 +44,27 @@ Button {
     contentItem: Row {
         id: layout
         anchors.centerIn: parent
-        spacing: busySpinner.visible ? 8 : 0
+        spacing: busySpinnerLoader.active ? 8 : 0
 
-        Custom.LoadingSpinner {
-            id: busySpinner
-            visible: control.busy
-            running: control.busy
-            color: control.foregroundColor
-            implicitWidth: 16
-            implicitHeight: 16
-            width: visible ? implicitWidth : 0
-            height: visible ? implicitHeight : 0
+        Loader {
+            id: busySpinnerLoader
+            active: control.busy
+            asynchronous: true
+
+            width: active ? control.busyIndicatorSize : 0
+            height: active ? control.busyIndicatorSize : 0
+            implicitWidth: width
+            implicitHeight: height
+
+            sourceComponent: Custom.LoadingSpinner {
+                anchors.centerIn: parent
+                running: control.busy
+                color: control.foregroundColor
+                implicitWidth: control.busyIndicatorSize
+                implicitHeight: control.busyIndicatorSize
+                width: implicitWidth
+                height: implicitHeight
+            }
         }
 
         Text {
