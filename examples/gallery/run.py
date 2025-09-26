@@ -48,8 +48,19 @@ def main() -> int:
     engine.load(QUrl.fromLocalFile(str(qml_file)))
 
     if not engine.rootObjects():
-        warnings_attr = getattr(engine, "warnings", None)
-        warnings_list = warnings_attr() if callable(warnings_attr) else []
+        warnings_list = []
+
+        # PySide exposes both a ``warnings()`` method and a ``warnings`` signal.
+        # Accessing the attribute on the instance returns the signal, which is
+        # callable but raises ``TypeError`` when invoked.  Instead, invoke the
+        # unbound method from the type to reliably retrieve the collected
+        # warnings regardless of the binding implementation.
+        warnings_method = getattr(QQmlApplicationEngine, "warnings", None)
+        if callable(warnings_method):  # pragma: no branch - defensive guard
+            try:
+                warnings_list = warnings_method(engine)  # type: ignore[misc]
+            except TypeError:
+                warnings_list = []
 
         for warning in warnings_list:
             print(warning.toString())
