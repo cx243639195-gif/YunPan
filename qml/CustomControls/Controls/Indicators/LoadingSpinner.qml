@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Shapes 1.15
+import QtGraphicalEffects 1.15
 import "LoadingSpinnerLogic.js" as Logic
 
 Item {
@@ -64,6 +65,16 @@ Item {
         }
     }
 
+    ColorOverlay {
+        id: colorOverlay
+        anchors.fill: parent
+        source: arcShape
+        color: spinner.color
+        cached: false
+        visible: spinner._hasArc
+        opacity: 1.0
+    }
+
     RotationAnimator {
         id: spinAnimation
         target: spinTransform
@@ -80,13 +91,13 @@ Item {
         running: false
 
         OpacityAnimator {
-            target: arcShape
+            target: colorOverlay
             to: spinner.minOpacity
             duration: spinner.pulseDuration / 2
             easing.type: Easing.InOutQuad
         }
         OpacityAnimator {
-            target: arcShape
+            target: colorOverlay
             to: 1.0
             duration: spinner.pulseDuration / 2
             easing.type: Easing.InOutQuad
@@ -101,7 +112,7 @@ Item {
         pulseAnimation.running = shouldRun;
         if (!shouldRun) {
             spinTransform.angle = spinner._baseRotation;
-            arcShape.opacity = 1.0;
+            colorOverlay.opacity = 1.0;
         }
     }
 
