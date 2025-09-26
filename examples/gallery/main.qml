@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import CustomControls 1.0 as Custom
+import "Translations.js" as GalleryStrings
 
 ApplicationWindow {
     id: window
@@ -9,34 +10,24 @@ ApplicationWindow {
     width: 480
     height: 320
 
-    property string windowTitle: Custom.I18nManager.tr("labels.headline", "Custom Controls Library")
-    property color windowBackground: Custom.ThemeManager.token("surface.background")
-    property color panelBackground: Custom.ThemeManager.token("surface.backgroundRaised")
-    property color panelBorder: Custom.ThemeManager.token("surface.border")
-
-    function updateTitle() {
-        windowTitle = Custom.I18nManager.tr("labels.headline", "Custom Controls Library");
+    readonly property bool _stringsLoaded: GalleryStrings !== undefined
+    property int languageRevision: Custom.I18nManager.revision
+    property int themeRevision: Custom.ThemeManager.revision
+    property string windowTitle: {
+        languageRevision;
+        return Custom.I18nManager.tr("labels.headline", "Custom Controls Library");
     }
-
-    function updateThemeColors() {
-        windowBackground = Custom.ThemeManager.token("surface.background");
-        panelBackground = Custom.ThemeManager.token("surface.backgroundRaised");
-        panelBorder = Custom.ThemeManager.token("surface.border");
+    property color windowBackground: {
+        themeRevision;
+        return Custom.ThemeManager.token("surface.background");
     }
-
-    Component.onCompleted: {
-        updateTitle();
-        updateThemeColors();
+    property color panelBackground: {
+        themeRevision;
+        return Custom.ThemeManager.token("surface.backgroundRaised");
     }
-
-    Connections {
-        target: Custom.I18nManager
-        onLanguageChanged: updateTitle()
-    }
-
-    Connections {
-        target: Custom.ThemeManager
-        onThemeChanged: updateThemeColors()
+    property color panelBorder: {
+        themeRevision;
+        return Custom.ThemeManager.token("surface.border");
     }
 
     title: windowTitle
@@ -58,39 +49,19 @@ ApplicationWindow {
 
             Button {
                 id: toggleThemeButton
-                property string cachedText: Custom.I18nManager.tr("actions.toggleTheme", "Toggle theme")
-
-                function updateText() {
-                    cachedText = Custom.I18nManager.tr("actions.toggleTheme", "Toggle theme");
+                text: {
+                    window.languageRevision;
+                    return Custom.I18nManager.tr("actions.toggleTheme", "Toggle theme");
                 }
-
-                Component.onCompleted: updateText()
-
-                Connections {
-                    target: Custom.I18nManager
-                    onLanguageChanged: updateText()
-                }
-
-                text: cachedText
                 onClicked: Custom.ThemeManager.toggleTheme()
             }
 
             Button {
                 id: toggleLanguageButton
-                property string cachedText: Custom.I18nManager.tr("actions.toggleLanguage", "Switch language")
-
-                function updateText() {
-                    cachedText = Custom.I18nManager.tr("actions.toggleLanguage", "Switch language");
+                text: {
+                    window.languageRevision;
+                    return Custom.I18nManager.tr("actions.toggleLanguage", "Switch language");
                 }
-
-                Component.onCompleted: updateText()
-
-                Connections {
-                    target: Custom.I18nManager
-                    onLanguageChanged: updateText()
-                }
-
-                text: cachedText
                 onClicked: Custom.I18nManager.toggleLanguage()
             }
         }
@@ -112,6 +83,7 @@ ApplicationWindow {
 
                 Custom.PrimaryButton {
                     textKey: "buttons.secondary.default"
+                    busyTextKey: "buttons.secondary.loading"
                     busy: true
                 }
             }

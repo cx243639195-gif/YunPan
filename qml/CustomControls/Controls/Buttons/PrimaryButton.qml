@@ -1,64 +1,32 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
-import "." as Custom
+import "../.." as Custom
 import "PrimaryButtonLogic.js" as Logic
 
 Button {
     id: control
 
     property string textKey: "buttons.primary.default"
+    property string textFallback: Logic.defaultTextFallback(control.textKey)
     property bool busy: false
+    property string busyTextKey: Logic.defaultBusyKey()
+    property string busyTextFallback: Logic.busyFallback()
 
+    property int languageRevision: Custom.I18nManager.revision
+    property int themeRevision: Custom.ThemeManager.revision
     property var themePalette: Custom.ThemeManager.palette
-    property string displayText: Custom.I18nManager.tr(control.textKey, control.textKey)
-    property color backgroundColor: "#000000"
-    property color foregroundColor: "#ffffff"
-    property real resolvedOpacity: 1.0
-
-    function updateDisplayText() {
-        displayText = Custom.I18nManager.tr(control.busy ? "buttons.primary.loading" : control.textKey,
-                                            control.busy ? "Loading..." : control.textKey);
+    property var colorRoles: {
+        themeRevision;
+        return Logic.colorSet(themePalette);
     }
-
-    function updateColors() {
-        backgroundColor = Logic.backgroundColor(control.themePalette, control);
-        foregroundColor = Logic.foregroundColor(control.themePalette, control);
-    }
-
-    function updateOpacity() {
-        resolvedOpacity = Logic.opacity(control);
-    }
-
-    function refreshVisualState() {
-        updateColors();
-        updateOpacity();
-    }
-
-    Component.onCompleted: {
-        updateDisplayText();
-        refreshVisualState();
-    }
-
-    onBusyChanged: {
-        updateDisplayText();
-        refreshVisualState();
-    }
-
-    onTextKeyChanged: updateDisplayText()
-    onHoveredChanged: updateColors()
-    onDownChanged: updateColors()
-    onEnabledChanged: updateOpacity()
-    onThemePaletteChanged: updateColors()
-
-    Connections {
-        target: Custom.I18nManager
-        onLanguageChanged: updateDisplayText()
-    }
-
-    Connections {
-        target: Custom.ThemeManager
-        onThemeChanged: updateColors()
-    }
+    property string displayText: Logic.displayText(Custom.I18nManager, languageRevision,
+                                                  control.textKey, control.textFallback,
+                                                  control.busy, control.busyTextKey,
+                                                  control.busyTextFallback)
+    property color backgroundColor: Logic.backgroundColor(colorRoles, control.hovered,
+                                                          control.down, control.enabled)
+    property color foregroundColor: Logic.foregroundColor(colorRoles, control.enabled)
+    property real resolvedOpacity: Logic.opacity(control.enabled)
 
     implicitHeight: contentItem.implicitHeight + topPadding + bottomPadding
     implicitWidth: Math.max(background.implicitWidth, contentItem.implicitWidth + leftPadding + rightPadding)
@@ -67,21 +35,26 @@ Button {
     rightPadding: Logic.horizontalPadding()
     topPadding: Logic.verticalPadding()
     bottomPadding: Logic.verticalPadding()
-    
+
     enabled: !control.busy
     focusPolicy: Qt.StrongFocus
     opacity: control.resolvedOpacity
 
     contentItem: Row {
         id: layout
-        spacing: control.busy ? 8 : 0
         anchors.centerIn: parent
+        spacing: spinnerLoader.active && spinnerLoader.item ? 8 : 0
 
-        BusyIndicator {
-            visible: control.busy
-            running: control.busy
-            implicitWidth: 16
-            implicitHeight: 16
+        Loader {
+            id: spinnerLoader
+            active: control.busy
+            sourceComponent: Component {
+                Custom.LoadingSpinner {
+                    color: control.foregroundColor
+                    implicitWidth: 16
+                    implicitHeight: 16
+                }
+            }
         }
 
         Text {
