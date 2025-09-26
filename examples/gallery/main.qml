@@ -83,38 +83,67 @@ ApplicationWindow {
             color: window.panelBackground
             border.color: window.panelBorder
 
+            Component {
+                id: actionsTab
+
+                Item {
+                    anchors.fill: parent
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        spacing: 12
+
+                        RowLayout {
+                            Layout.alignment: Qt.AlignHCenter
+                            spacing: 12
+
+                            Custom.PrimaryButton {
+                                Layout.alignment: Qt.AlignHCenter
+                                textKey: "buttons.primary.default"
+                            }
+
+                            Custom.PrimaryButton {
+                                Layout.alignment: Qt.AlignHCenter
+                                textKey: "buttons.secondary.default"
+                                busyTextKey: "buttons.secondary.loading"
+                                busy: true
+                            }
+                        }
+                    }
+                }
+            }
+
+            Component {
+                id: accountsTab
+
+                Item {
+                    anchors.fill: parent
+
+                    Custom.ExpandableTable {
+                        anchors.fill: parent
+                        model: accountTableModel
+                        alternatingRowColors: true
+                        columns: [
+                            { title: qsTr("Name"), role: "name", flex: 2 },
+                            { title: qsTr("Email"), role: "email", flex: 3 },
+                            { title: qsTr("Storage"), role: "storage", alignment: "right", flex: 1 },
+                            { title: qsTr("Status"), role: "status", flex: 1 }
+                        ]
+                    }
+                }
+            }
+
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 24
                 spacing: 16
 
-                RowLayout {
-                    Layout.alignment: Qt.AlignHCenter
-                    spacing: 12
-
-                    Custom.PrimaryButton {
-                        Layout.alignment: Qt.AlignHCenter
-                        textKey: "buttons.primary.default"
-                    }
-
-                    Custom.PrimaryButton {
-                        Layout.alignment: Qt.AlignHCenter
-                        textKey: "buttons.secondary.default"
-                        busyTextKey: "buttons.secondary.loading"
-                        busy: true
-                    }
-                }
-
-                Custom.ExpandableTable {
+                Custom.TabView {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    model: accountTableModel
-                    alternatingRowColors: true
-                    columns: [
-                        { title: qsTr("Name"), role: "name", flex: 2 },
-                        { title: qsTr("Email"), role: "email", flex: 3 },
-                        { title: qsTr("Storage"), role: "storage", alignment: "right", flex: 1 },
-                        { title: qsTr("Status"), role: "status", flex: 1 }
+                    tabs: [
+                        { title: qsTr("Actions"), component: actionsTab },
+                        { title: qsTr("Accounts"), component: accountsTab }
                     ]
                 }
             }

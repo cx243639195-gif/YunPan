@@ -5,3 +5,4 @@ PrimaryButton 1.0 Controls/Buttons/PrimaryButton.qml
 TitleLabel 1.0 Controls/Labels/TitleLabel.qml
 LoadingSpinner 1.0 Controls/Indicators/LoadingSpinner.qml
 ExpandableTable 1.0 Controls/Tables/ExpandableTable.qml
+TabView 1.0 Controls/Tabs/TabView.qml
