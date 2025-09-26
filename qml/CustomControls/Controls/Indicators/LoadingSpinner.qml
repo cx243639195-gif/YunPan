@@ -1,5 +1,5 @@
 import QtQuick 2.15
-import QtQuick.Shapes 1.15
+import QtGraphicalEffects 1.15
 import "LoadingSpinnerLogic.js" as Logic
 
 Item {
@@ -7,110 +7,35 @@ Item {
 
     property bool running: true
     property color color: "#ffffff"
-    property real minOpacity: Logic.minOpacity()
-    property real strokeRatio: Logic.strokeRatio()
-    property real sweepAngle: Logic.sweepAngle()
-    property int rotationDuration: Logic.rotationDuration()
-    property int pulseDuration: Logic.pulseDuration()
+    property url source: ""
+    property real playbackRate: 1.0
 
-    implicitWidth: Logic.defaultDiameter()
-    implicitHeight: Logic.defaultDiameter()
+    implicitWidth: image.status === Image.Ready && image.sourceSize.width > 0
+                   ? image.sourceSize.width : Logic.defaultDiameter()
+    implicitHeight: image.status === Image.Ready && image.sourceSize.height > 0
+                    ? image.sourceSize.height : Logic.defaultDiameter()
 
-    readonly property bool _active: running && visible && window !== null
-    readonly property real _diameter: Math.min(width, height)
-    readonly property real _strokeWidth: Logic.strokeWidthFor(_diameter, strokeRatio)
-    readonly property real _radius: Math.max(0, (_diameter - _strokeWidth) / 2)
-    readonly property real _baseRotation: -90
-    readonly property real _startAngle: -sweepAngle / 2
-    readonly property real _startRadians: _startAngle * Math.PI / 180
-    readonly property bool _hasArc: _radius > 0 && _strokeWidth > 0
+    readonly property bool _shouldPlay: running && visible && window !== null
 
-    width: implicitWidth
-    height: implicitHeight
-
-    antialiasing: true
-
-    transform: Rotation {
-        id: spinTransform
-        origin.x: spinner.width / 2
-        origin.y: spinner.height / 2
-        angle: spinner._baseRotation
+    AnimatedImage {
+        id: image
+        anchors.centerIn: parent
+        width: spinner.width
+        height: spinner.height
+        asynchronous: false
+        source: spinner.source
+        fillMode: Image.PreserveAspectFit
+        playing: spinner._shouldPlay
+        cache: true
+        speed: spinner.playbackRate
+        visible: false
     }
 
-    Shape {
-        id: arcShape
-        anchors.fill: parent
-        visible: spinner._hasArc
-        smooth: true
-        opacity: 1.0
-
-        ShapePath {
-            strokeWidth: spinner._strokeWidth
-            strokeColor: spinner.color
-            capStyle: ShapePath.RoundCap
-            joinStyle: ShapePath.RoundJoin
-            fillColor: "transparent"
-            startX: spinner.width / 2 + spinner._radius * Math.cos(spinner._startRadians)
-            startY: spinner.height / 2 + spinner._radius * Math.sin(spinner._startRadians)
-
-            PathAngleArc {
-                centerX: spinner.width / 2
-                centerY: spinner.height / 2
-                radiusX: spinner._radius
-                radiusY: spinner._radius
-                startAngle: spinner._startAngle
-                sweepAngle: spinner.sweepAngle
-            }
-        }
-    }
-
-    RotationAnimator {
-        id: spinAnimation
-        target: spinTransform
-        from: spinner._baseRotation
-        to: spinner._baseRotation + 360
-        duration: spinner.rotationDuration
-        loops: Animation.Infinite
-        running: false
-    }
-
-    SequentialAnimation {
-        id: pulseAnimation
-        loops: Animation.Infinite
-        running: false
-
-        OpacityAnimator {
-            target: arcShape
-            to: spinner.minOpacity
-            duration: spinner.pulseDuration / 2
-            easing.type: Easing.InOutQuad
-        }
-        OpacityAnimator {
-            target: arcShape
-            to: 1.0
-            duration: spinner.pulseDuration / 2
-            easing.type: Easing.InOutQuad
-        }
-    }
-
-    function updateAnimations() {
-        var shouldRun = spinner._active;
-        if (shouldRun && !spinAnimation.running)
-            spinTransform.angle = spinner._baseRotation;
-        spinAnimation.running = shouldRun;
-        pulseAnimation.running = shouldRun;
-        if (!shouldRun) {
-            spinTransform.angle = spinner._baseRotation;
-            arcShape.opacity = 1.0;
-        }
-    }
-
-    onRunningChanged: updateAnimations()
-    onVisibleChanged: updateAnimations()
-    onWindowChanged: updateAnimations()
-
-    Component.onCompleted: {
-        spinTransform.angle = spinner._baseRotation;
-        updateAnimations();
+    ColorOverlay {
+        anchors.fill: image
+        visible: image.status === Image.Ready
+        source: image
+        color: spinner.color
+        cached: true
     }
 }
