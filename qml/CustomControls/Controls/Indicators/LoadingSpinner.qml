@@ -1,5 +1,4 @@
 import QtQuick 2.15
-import QtGraphicalEffects 1.15
 import "LoadingSpinnerLogic.js" as Logic
 
 Item {
@@ -25,17 +24,10 @@ Item {
         asynchronous: false
         source: spinner.source
         fillMode: Image.PreserveAspectFit
-        playing: spinner._shouldPlay
-        cache: true
+        playing: spinner._shouldPlay && spinner.source !== ""
+        cache: false
         speed: spinner.playbackRate
-        visible: false
-    }
-
-    ColorOverlay {
-        anchors.fill: image
-        visible: image.status === Image.Ready
-        source: image
+        visible: status === Image.Ready && spinner.source !== ""
         color: spinner.color
-        cached: true
     }
 }
