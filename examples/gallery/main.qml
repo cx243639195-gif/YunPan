@@ -10,6 +10,16 @@ ApplicationWindow {
     width: 480
     height: 320
 
+    ListModel {
+        id: accountTableModel
+
+        ListElement { name: "Alice"; email: "alice@example.com"; storage: "15 GB"; status: "Active" }
+        ListElement { name: "Bob"; email: "bob@example.com"; storage: "8 GB"; status: "Invited" }
+        ListElement { name: "Charlie"; email: "charlie@example.com"; storage: "24 GB"; status: "Active" }
+        ListElement { name: "Diana"; email: "diana@example.com"; storage: "4 GB"; status: "Suspended" }
+        ListElement { name: "Evelyn"; email: "evelyn@example.com"; storage: "32 GB"; status: "Active" }
+    }
+
     readonly property bool _stringsLoaded: GalleryStrings !== undefined
     property int languageRevision: Custom.I18nManager.revision
     property int themeRevision: Custom.ThemeManager.revision
@@ -73,18 +83,39 @@ ApplicationWindow {
             color: window.panelBackground
             border.color: window.panelBorder
 
-            Column {
-                anchors.centerIn: parent
-                spacing: 12
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 24
+                spacing: 16
 
-                Custom.PrimaryButton {
-                    textKey: "buttons.primary.default"
+                RowLayout {
+                    Layout.alignment: Qt.AlignHCenter
+                    spacing: 12
+
+                    Custom.PrimaryButton {
+                        Layout.alignment: Qt.AlignHCenter
+                        textKey: "buttons.primary.default"
+                    }
+
+                    Custom.PrimaryButton {
+                        Layout.alignment: Qt.AlignHCenter
+                        textKey: "buttons.secondary.default"
+                        busyTextKey: "buttons.secondary.loading"
+                        busy: true
+                    }
                 }
 
-                Custom.PrimaryButton {
-                    textKey: "buttons.secondary.default"
-                    busyTextKey: "buttons.secondary.loading"
-                    busy: true
+                Custom.ExpandableTable {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    model: accountTableModel
+                    alternatingRowColors: true
+                    columns: [
+                        { title: qsTr("Name"), role: "name", flex: 2 },
+                        { title: qsTr("Email"), role: "email", flex: 3 },
+                        { title: qsTr("Storage"), role: "storage", alignment: "right", flex: 1 },
+                        { title: qsTr("Status"), role: "status", flex: 1 }
+                    ]
                 }
             }
         }
