@@ -94,15 +94,18 @@ Item {
     }
 
     function updateAnimations() {
-        var shouldRun = spinner._active;
-        if (shouldRun && !spinAnimation.running)
-            spinTransform.angle = spinner._baseRotation;
-        spinAnimation.running = shouldRun;
-        pulseAnimation.running = shouldRun;
-        if (!shouldRun) {
+        const shouldRun = spinner._active;
+
+        if (shouldRun) {
+            if (!spinAnimation.running)
+                spinTransform.angle = spinner._baseRotation;
+        } else {
             spinTransform.angle = spinner._baseRotation;
             arcShape.opacity = 1.0;
         }
+
+        spinAnimation.running = shouldRun;
+        pulseAnimation.running = shouldRun;
     }
 
     onRunningChanged: updateAnimations()
